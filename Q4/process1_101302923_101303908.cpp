@@ -13,16 +13,16 @@
 #include <sys/shm.h>
 #include <sys/sem.h>
 
-int createSharedVariable(int **var, size_t size);
+int createSharedVariable(int **var, size_t size, int key);
 
 int main(){
 	int *counter = nullptr;
 	int *multiple = nullptr;
-	int counter_id = createSharedVariable(&counter, sizeof(int));
+	int counter_id = createSharedVariable(&counter, sizeof(int), 1);
 	if (counter_id == EXIT_FAILURE) {
 		return EXIT_FAILURE;
 	}
-	int multiple_id = createSharedVariable(&multiple, sizeof(int));
+	int multiple_id = createSharedVariable(&multiple, sizeof(int), 2);
 	if (multiple_id == EXIT_FAILURE) {
 		return EXIT_FAILURE;
 	}
@@ -38,14 +38,7 @@ int main(){
 		std::cout << "Parent: " << getpid() << ", Child: " << pid << std::endl;
 	}
 	if (pid == 0) {
-		while (*counter <= 100); //Wait until count hits 100
-		while (*counter <= 500) {
-			if (*counter % *multiple == 0) {
-				std::cout << "[Child] Multiple: "<< *multiple << ", Count: " << *counter << std::endl;
-			}
-			*counter = *counter + 1;
-			sleep(1);
-		}
+		execlp("./bin/process2_101302923_101303908", "", NULL);
 	}
 	else {
 		while (*counter <= 500) {
@@ -71,10 +64,10 @@ int main(){
 	return EXIT_SUCCESS;
 }
 
-int createSharedVariable(int **var, size_t size) {
+int createSharedVariable(int **var, size_t size, int key) {
 	int var_id;
 	void *var_addr;
-	var_id = shmget(IPC_PRIVATE, size, IPC_CREAT | IPC_EXCL | 0666);
+	var_id = shmget(key, size, IPC_CREAT | IPC_EXCL | 0666);
 	if (var_id == -1) {
 		std::cout << "Get Shared Memory failed" << std::endl;
 		return -1;
